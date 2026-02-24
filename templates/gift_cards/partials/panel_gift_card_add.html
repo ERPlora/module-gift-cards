@@ -1,0 +1,69 @@
+{% load djicons i18n %}
+
+<div class="side-sheet-header">
+    <h3 class="sheet-title">{% trans "Add Giftcard" %}</h3>
+    <button class="sheet-close" @click="closePanel()">{% icon "close-outline" %}</button>
+</div>
+
+<div class="side-sheet-content">
+    <form id="add-gift_card-form"
+          hx-post="{% url 'gift_cards:gift_card_add' %}"
+          hx-target="#datatable-body"
+          hx-swap="innerHTML"
+          @htmx:after-request="closePanel()"
+          class="flex flex-col gap-4 p-6">
+        {% csrf_token %}
+
+        {% if error %}
+        <div class="callout callout-error">
+            <div class="callout-content"><span class="callout-text">{{ error }}</span></div>
+        </div>
+        {% endif %}
+
+        <div>
+            <label class="text-sm font-medium mb-1 block">{% trans "Code" %}</label>
+            <input type="text" name="code" class="input input-sm w-full" placeholder="{% trans 'Code' %}">
+        </div>
+
+        <div>
+            <label class="text-sm font-medium mb-1 block">{% trans "Initial Balance" %}</label>
+            <input type="number" name="initial_balance" class="input input-sm w-full" step="0.01" placeholder="0">
+        </div>
+
+        <div>
+            <label class="text-sm font-medium mb-1 block">{% trans "Current Balance" %}</label>
+            <input type="number" name="current_balance" class="input input-sm w-full" step="0.01" placeholder="0">
+        </div>
+
+        <div>
+            <label class="text-sm font-medium mb-1 block">{% trans "Status" %}</label>
+            <select name="status" class="select select-sm w-full">
+                <option value="">{% trans "Select..." %}</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="text-sm font-medium mb-1 block">{% trans "Purchaser Name" %}</label>
+            <input type="text" name="purchaser_name" class="input input-sm w-full" placeholder="{% trans 'Purchaser Name' %}">
+        </div>
+
+        <div>
+            <label class="text-sm font-medium mb-1 block">{% trans "Recipient Name" %}</label>
+            <input type="text" name="recipient_name" class="input input-sm w-full" placeholder="{% trans 'Recipient Name' %}">
+        </div>
+
+        <div>
+            <label class="text-sm font-medium mb-1 block">{% trans "Expires At" %}</label>
+            <input type="date" name="expires_at" class="input input-sm w-full">
+        </div>
+    </form>
+</div>
+
+<div class="side-sheet-footer">
+    <div class="flex justify-end gap-2">
+        <button type="button" class="btn btn-ghost btn-sm" @click="closePanel()">{% trans "Cancel" %}</button>
+        <button type="submit" form="add-gift_card-form" class="btn btn-sm color-primary">
+            {% icon "add-outline" %} {% trans "Add" %}
+        </button>
+    </div>
+</div>
