@@ -29,3 +29,17 @@ PERMISSIONS = [
 'gift_cards.redeem_giftcard',
 'gift_cards.manage_settings',
 ]
+
+ROLE_PERMISSIONS = {
+    "admin": ["*"],
+    "manager": [
+        "add_giftcard",
+        "change_giftcard",
+        "redeem_giftcard",
+        "view_giftcard",
+    ],
+    "employee": [
+        "add_giftcard",
+        "view_giftcard",
+    ],
+}
