@@ -113,3 +113,123 @@ class CheckGiftCardBalance(AssistantTool):
             }
         except GiftCard.DoesNotExist:
             return {"error": f"Gift card with code '{args['code']}' not found"}
+
+
+@register_tool
+class UpdateGiftCard(AssistantTool):
+    name = "update_gift_card"
+    description = "Update a gift card's fields (purchaser, recipient, expiry, status, balance)."
+    module_id = "gift_cards"
+    required_permission = "gift_cards.change_giftcard"
+    requires_confirmation = True
+    parameters = {
+        "type": "object",
+        "properties": {
+            "gift_card_id": {"type": "string", "description": "Gift card ID"},
+            "purchaser_name": {"type": "string"},
+            "recipient_name": {"type": "string"},
+            "expires_at": {"type": "string", "description": "Expiry date (YYYY-MM-DD)"},
+            "status": {"type": "string", "description": "active, redeemed, expired, cancelled"},
+            "current_balance": {"type": "string", "description": "Override current balance"},
+        },
+        "required": ["gift_card_id"],
+        "additionalProperties": False,
+    }
+
+    def execute(self, args, request):
+        from decimal import Decimal
+        from gift_cards.models import GiftCard
+        try:
+            gc = GiftCard.objects.get(id=args['gift_card_id'])
+        except GiftCard.DoesNotExist:
+            return {"error": f"Gift card {args['gift_card_id']} not found"}
+        fields = ['updated_at']
+        for field in ('purchaser_name', 'recipient_name', 'expires_at', 'status'):
+            if field in args:
+                setattr(gc, field, args[field])
+                fields.append(field)
+        if 'current_balance' in args:
+            gc.current_balance = Decimal(args['current_balance'])
+            fields.append('current_balance')
+        gc.save(update_fields=fields)
+        return {"id": str(gc.id), "code": gc.code, "updated": True}
+
+
+@register_tool
+class DeleteGiftCard(AssistantTool):
+    name = "delete_gift_card"
+    description = "Deactivate (cancel) a gift card by ID."
+    module_id = "gift_cards"
+    required_permission = "gift_cards.change_giftcard"
+    requires_confirmation = True
+    parameters = {
+        "type": "object",
+        "properties": {
+            "gift_card_id": {"type": "string", "description": "Gift card ID"},
+        },
+        "required": ["gift_card_id"],
+        "additionalProperties": False,
+    }
+
+    def execute(self, args, request):
+        from gift_cards.models import GiftCard
+        try:
+            gc = GiftCard.objects.get(id=args['gift_card_id'])
+            gc.status = 'cancelled'
+            gc.save(update_fields=['status', 'updated_at'])
+            return {"id": str(gc.id), "code": gc.code, "cancelled": True}
+        except GiftCard.DoesNotExist:
+            return {"error": f"Gift card {args['gift_card_id']} not found"}
+
+
+@register_tool
+class BulkCreateGiftCards(AssistantTool):
+    name = "bulk_create_gift_cards"
+    description = "Create multiple gift cards at once (max 50)."
+    module_id = "gift_cards"
+    required_permission = "gift_cards.change_giftcard"
+    requires_confirmation = True
+    parameters = {
+        "type": "object",
+        "properties": {
+            "gift_cards": {
+                "type": "array",
+                "description": "List of gift cards to create (max 50)",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "initial_balance": {"type": "string", "description": "Gift card value"},
+                        "purchaser_name": {"type": "string"},
+                        "recipient_name": {"type": "string"},
+                        "expires_days": {"type": "integer", "description": "Days until expiry (default 365)"},
+                    },
+                    "required": ["initial_balance"],
+                    "additionalProperties": False,
+                },
+                "maxItems": 50,
+            },
+        },
+        "required": ["gift_cards"],
+        "additionalProperties": False,
+    }
+
+    def execute(self, args, request):
+        import uuid
+        from datetime import date, timedelta
+        from decimal import Decimal
+        from gift_cards.models import GiftCard
+        created = []
+        for item in args['gift_cards'][:50]:
+            balance = Decimal(item['initial_balance'])
+            expires_days = item.get('expires_days', 365)
+            gc = GiftCard.objects.create(
+                code=uuid.uuid4().hex[:12].upper(),
+                initial_balance=balance,
+                current_balance=balance,
+                purchaser_name=item.get('purchaser_name', ''),
+                recipient_name=item.get('recipient_name', ''),
+                expires_at=date.today() + timedelta(days=expires_days),
+                status='active',
+            )
+            created.append({"id": str(gc.id), "code": gc.code, "balance": str(gc.current_balance)})
+        return {"created": created, "count": len(created)}
