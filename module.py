@@ -2,8 +2,8 @@ from django.utils.translation import gettext_lazy as _
 
 MODULE_ID = 'gift_cards'
 MODULE_NAME = _('Gift Cards')
-MODULE_VERSION = '1.0.0'
-MODULE_ICON = 'gift-outline'
+MODULE_VERSION = '1.0.1'
+MODULE_ICON = 'material:card_giftcard'
 MODULE_DESCRIPTION = _('Gift card creation, redemption and balance tracking')
 MODULE_AUTHOR = 'ERPlora'
 MODULE_CATEGORY = 'marketing'
