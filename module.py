@@ -7,6 +7,7 @@ MODULE_ICON = 'material:card_giftcard'
 MODULE_DESCRIPTION = _('Gift card creation, redemption and balance tracking')
 MODULE_AUTHOR = 'ERPlora'
 MODULE_CATEGORY = 'marketing'
+HAS_MODELS = True
 
 MENU = {
     'label': _('Gift Cards'),
