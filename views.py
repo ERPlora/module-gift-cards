@@ -16,6 +16,7 @@ from apps.core.services import export_to_csv, export_to_excel
 from apps.modules_runtime.navigation import with_module_nav
 
 from .models import GiftCard
+from apps.core.scheduled_tasks import get_module_scheduled_tasks
 
 PER_PAGE_CHOICES = [12, 24, 48, 96, 0]
 
@@ -184,5 +185,6 @@ def gift_cards_bulk_action(request):
 @with_module_nav('gift_cards', 'settings')
 @htmx_view('gift_cards/pages/settings.html', 'gift_cards/partials/settings_content.html')
 def settings_view(request):
-    return {}
+    return {
+        'scheduled_tasks': get_module_scheduled_tasks('gift_cards'),}
 
