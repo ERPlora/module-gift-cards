@@ -44,3 +44,11 @@ ROLE_PERMISSIONS = {
         "view_giftcard",
     ],
 }
+
+SCHEDULED_TASKS = [
+    {
+        'task': 'gift_cards.check_expiry',
+        'cron': '0 10 * * *',
+        'description': 'Mark expired gift cards and notify customers',
+    },
+]
